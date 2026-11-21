@@ -4,7 +4,7 @@
 ![Language](https://img.shields.io/badge/Firmware-Arduino%20C%2B%2B%20%7C%20Bare--Metal%20AVR--C-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-A beginner-friendly, end-to-end build guide for a multi-sensor **Line-Following Robot (LFR)** built around the **Arduino Nano** and **L298N** motor driver. In addition to PID line tracking, the robot features real-time obstacle avoidance and hardware-interrupt fire detection with an optional extinguishing actuator.
+A beginner-friendly, end-to-end build guide for a multi-sensor **Line-Following Robot (LFR)** built around the **Atmega328p** and **L298N** motor driver. In addition to PID line tracking, the robot features real-time obstacle avoidance and hardware-interrupt fire detection with an optional extinguishing actuator.
 
 ---
 
