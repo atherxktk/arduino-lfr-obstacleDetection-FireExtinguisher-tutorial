@@ -12,7 +12,8 @@ A beginner-friendly, end-to-end build guide for a multi-sensor **Line-Following 
 - [System Architecture](#system-architecture)
 - [Bill of Materials (BOM)](#bill-of-materials-bom)
 - [Pin Mapping](#pin-mapping)
-- [Power & Wiring Guide](#power--wiring-guide)
+- [Power, Extinguisher Wiring & Safety Notes](#power-extinguisher-wiring--safety-notes)
+- [Sensor Interrupt & Pin Notes](#sensor-interrupt--pin-notes)
 - [Firmware Setup](#firmware-setup)
 - [Calibration & PID Tuning](#calibration--pid-tuning)
 - [Repository Contents](#repository-contents)
@@ -69,19 +70,18 @@ The firmware runs a **three-tier priority control loop**:
 
 ---
 
-## Power & Wiring Guide
+## Power, Extinguisher Wiring & Safety Notes
 
-1. **Battery Split:** Route Battery `(+)` through a main toggle switch to both the **L298N `12V` terminal** and the **5V Buck Converter `IN+`**.
-2. **5V Logic Rail:** Set the buck converter to `5.0V` (verify with a multimeter first), then connect `OUT+` to the **Arduino Nano `5V` pin** and the `VCC` pins of all sensors.
-3. **Common Ground:** Connect Battery `(-)`, Buck `GND`, L298N `GND`, Nano `GND`, and all sensor `GND` pins together.
-4. **Motors:** Connect the Left Motor to `OUT1`/`OUT2` and the Right Motor to `OUT3`/`OUT4`.
+- **L298N Voltage Drop:** The L298N drops ~1.8V–2.0V internally (higher under stall). Use a 2S (7.4V) or 3S (11.1V) battery pack so DC motors receive ~5.5V–9V.
+- **Extinguisher Driver (`D12`):** Never connect a fan or water pump directly to `D12`.
+  - *MOSFET (Recommended):* Logic-level N-MOSFET (`IRLZ44N`), `220 Ω` gate resistor, `10 kΩ` gate-to-GND pull-down, actuator powered from the 5V buck (if 5V load & buck ≥ 2–3A) or battery rail (if 6V–12V load), and a reverse-biased `1N4007`/`1N5819` flyback diode across the pump/fan terminals.
+  - *Relay:* 5V relay module powered from the 5V rail, load switched via `COM`/`NO` from the actuator power rail, with a `1N4007` flyback diode across the DC load terminals.
+- **Common Ground:** Tie Battery `(-)`, Buck `GND`, L298N `GND`, Nano `GND`, sensor `GND`s, and the extinguisher driver `GND` together.
+- **USB 5V Back-Feeding Precaution:** Disconnect external `5V` from the Nano's `5V` pin (or switch off main power) before plugging the Nano into a PC via USB.
 
-> [!WARNING]
-> - **Remove the `ENA` and `ENB` jumpers** on the L298N before connecting `D5` and `D6`.
-> - **Unplug external 5V** from the Nano's `5V` pin before connecting the Nano to your PC via USB.
-> - **Never power a fan or pump directly from `D12`** — always use a relay module or logic-level MOSFET with a flyback diode.
-
----
+## Sensor Interrupt & Pin Notes
+- **Obstacle Sensor (`D2` / `INT0`, `D4`):** For HC-SR04, trigger on `D4` (`10 µs`) and measure `ECHO` on `D2` using `CHANGE` interrupt mode (rising + falling edges) for non-blocking timing. For a 3-pin digital IR obstacle sensor, use `FALLING` edge on `D2` and leave `D4` free.
+- **Fire / Flame Sensor (`D3` / `INT1`, `A7`):** `D3` triggers on `FALLING` edge (Active-LOW); apply 50–100 ms software debouncing and confirm with averaged `analogRead(A7)` samples to avoid false triggers from flickering light.
 
 ## Firmware Setup
 
@@ -99,3 +99,4 @@ Compile and flash directly with `avr-gcc` and `avrdude`:
 avr-gcc -mmcu=atmega328p -DF_CPU=16000000UL -Os -Wall firmware/avr_c/main.c -o main.elf
 avr-objcopy -O ihex -R .eeprom main.elf main.hex
 avrdude -c arduino -p m328p -P COM3 -b 115200 -U flash:w:main.hex:i
+
